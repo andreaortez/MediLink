@@ -4,7 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
 import java.time.LocalDate
@@ -16,12 +16,13 @@ data class DayUi(val date: LocalDate)
 class DayCalendarAdapter(
     private val days: List<DayUi>,
     private val onDaySelected: (LocalDate) -> Unit,
-    initialSelectedIndex: Int
-) : RecyclerView.Adapter<DayCalendarAdapter.DayViewHolder>() {
+    initialSelectedIndex: Int,
+
+    ) : RecyclerView.Adapter<DayCalendarAdapter.DayViewHolder>() {
 
     private var selectedPosition = 2
 
-    inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvDayNumber: TextView = itemView.findViewById(R.id.tvDayNumber)
         val tvDayName: TextView = itemView.findViewById(R.id.tvDayName)
     }
@@ -51,8 +52,8 @@ class DayCalendarAdapter(
         val isSelected = position == selectedPosition
         holder.itemView.isSelected = isSelected
 
-        val white = ContextCompat.getColor(holder.itemView.context, android.R.color.white)
-        val normal = ContextCompat.getColor(holder.itemView.context, android.R.color.white)
+        val white = getColor(holder.itemView.context, android.R.color.white)
+        getColor(holder.itemView.context, android.R.color.white)
 
         // si quisieras colores diferentes para texto seleccionado/normal:
         holder.tvDayNumber.setTextColor(white)

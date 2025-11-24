@@ -16,4 +16,9 @@
     <string name="title_activity_registro">Registro</string>
     <string name="title_activity_choose_user">ChooseUser</string>
     <string name="title_activity_home">HomeActivity</string>
+    <string name="_20">20</string>
+    <string name="sat">Sat</string>
+    <string name="hola">¡Hola!</string>
+    <string name="la_mejor_app_para_cuidar_tu_salud">La mejor app para cuidar tu salud</string>
+    <string name="hoy_20_jun">Hoy, 20 Jun</string>
 </resources>

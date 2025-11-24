@@ -2,6 +2,7 @@ package com.example.medilink.ui
 
 import DayCalendarAdapter
 import DayUi
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
@@ -16,6 +17,7 @@ import java.util.Locale
 
 class HomeActivity : AppCompatActivity() {
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,15 +42,11 @@ class HomeActivity : AppCompatActivity() {
 
         val centerIndex = 2
 
-        val adapter = DayCalendarAdapter(
-            days = days,
-            onDaySelected = { selectedDate ->
-                val localeEs = Locale("es", "ES")
+        val adapter = DayCalendarAdapter(days = days, onDaySelected = { selectedDate ->
+                Locale("es", "ES")
                 tvToday.text = "Hoy, " +
                         selectedDate.format(DateTimeFormatter.ofPattern("dd MMM"))
-            },
-            initialSelectedIndex = centerIndex,
-        )
+            }, initialSelectedIndex = centerIndex,)
 
         rvDays.adapter = adapter
 

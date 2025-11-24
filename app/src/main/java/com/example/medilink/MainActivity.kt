@@ -4,8 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.example.medilink.R.layout.login
-import com.example.medilink.ChooseUser
+
 import com.example.medilink.ui.HomeActivity
 import com.example.medilink.ui.login.Login
 
