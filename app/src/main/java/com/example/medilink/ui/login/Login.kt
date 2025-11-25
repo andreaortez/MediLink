@@ -15,6 +15,8 @@ import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
 import com.example.medilink.R
 import com.google.android.material.textfield.TextInputLayout
+import com.example.medilink.SessionManager
+
 
 class Login : AppCompatActivity() {
 
@@ -45,12 +47,18 @@ class Login : AppCompatActivity() {
                 showLoginFailed(result.error)
             }
             if (result.success != null) {
+                SessionManager.saveUserSession(
+                    context = this,
+                    userId = result.success.userId,
+                    userName = result.success.displayName
+                )
+
                 updateUiWithUser(result.success)
                 setResult(Activity.RESULT_OK)
-                // cerramos la pantalla al tener éxito
                 finish()
             }
         }
+
 
         passwordEdit?.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
