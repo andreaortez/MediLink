@@ -68,7 +68,6 @@ fun DatePickerRange(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // Hacemos el campo clickeable envolviéndolo en un Box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,7 +82,13 @@ fun DatePickerRange(
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier.matchParentSize(),
-                placeholder = { Text("Selecciona rango de fechas") },
+                placeholder = {
+                    Text(
+                        "Selecciona rango de fechas",
+                        color = Color.Gray,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
                 shape = RoundedCornerShape(12.dp),
                 trailingIcon = {
                     Icon(
@@ -97,7 +102,12 @@ fun DatePickerRange(
                     disabledBorderColor = Color.Gray,
                     disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
-                enabled = false // deshabilitamos edición para que no abra teclado
+                enabled = false,
+                singleLine = true,
+                textStyle = TextStyle(
+                    fontSize = 16.sp,
+                    color = AzulNegro
+                )
             )
         }
     }
@@ -185,19 +195,19 @@ fun DatePickerRange(
                     headlineContentColor = AzulNegro,
 
                     // Calendario
-                    todayContentColor = AzulNegro,                // Hoy en texto oscuro
-                    todayDateBorderColor = CelesteVivido2,        // Borde más suave que no compita con selección
-                    selectedDayContainerColor = Azul,             // Día seleccionado con azul fuerte
+                    todayContentColor = AzulNegro,
+                    todayDateBorderColor = CelesteVivido2,
+                    selectedDayContainerColor = Azul,
                     selectedDayContentColor = Color.White,
-                    dayContentColor = AzulOscuro,                 // Texto de días normales
-                    weekdayContentColor = AzulNegro,              // Días de semana más marcados
+                    dayContentColor = AzulOscuro,
+                    weekdayContentColor = AzulNegro,
 
-                    dayInSelectionRangeContainerColor = CelesteClaro, // Rango con fondo claro
-                    dayInSelectionRangeContentColor = AzulNegro,      // Texto del rango en contraste
+                    dayInSelectionRangeContainerColor = CelesteClaro,
+                    dayInSelectionRangeContentColor = AzulNegro,
 
                     // Botones año/mes
                     yearContentColor = AzulOscuro,
-                    selectedYearContainerColor = CelesteVivido,   // Año seleccionado con celeste vivo
+                    selectedYearContainerColor = CelesteVivido,
                     selectedYearContentColor = Color.White,
                     currentYearContentColor = Azul,
                 )
