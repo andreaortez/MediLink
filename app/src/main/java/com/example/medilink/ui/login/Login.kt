@@ -13,10 +13,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
+import com.example.medilink.ui.HomeActivity
 import com.example.medilink.R
 import com.google.android.material.textfield.TextInputLayout
 import com.example.medilink.SessionManager
-
 
 class Login : AppCompatActivity() {
 
@@ -55,7 +55,7 @@ class Login : AppCompatActivity() {
 
                 updateUiWithUser(result.success)
                 setResult(Activity.RESULT_OK)
-                finish()
+                homePage()
             }
         }
 
@@ -103,6 +103,14 @@ class Login : AppCompatActivity() {
 
     fun abrirRegistro(view: View) {
         startActivity(Intent(this, ChooseUser::class.java))
+    }
+
+    private fun homePage() {
+        val intent = Intent(this, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {

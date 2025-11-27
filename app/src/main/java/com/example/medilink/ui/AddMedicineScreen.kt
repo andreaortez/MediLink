@@ -1,7 +1,8 @@
 package com.example.medilink.ui
 
-
+import com.example.medilink.BuildConfig
 import android.app.DatePickerDialog
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -48,6 +49,7 @@ import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.Azul
 import com.example.medilink.ui.theme.AzulOscuro
+import org.json.JSONArray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,28 +59,21 @@ fun AddMedicineScreen(
     idUsuario: String,
     existingMedicine: MedicineUi? = null
 ) {
-    // URL base de tu backend (ajústala)
-    val BASE_URL = "https://Backend/meds"
+    val backUrl = BuildConfig.MEDS_URL
 
     var medicineName by remember(existingMedicine) {
         mutableStateOf(existingMedicine?.name ?: "")
     }
     var amount by remember { mutableStateOf("1") }
     var selectedForm by remember { mutableStateOf(0) }
-
     var showTimePicker by remember { mutableStateOf(false) }
-    var selectedTime by remember { mutableStateOf("") }
-
-    // FECHAS (display y formato backend)
-    val dateFormatDisplay = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val dateFormatBackend = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
     var startDateDisplay by remember { mutableStateOf("") }
     var endDateDisplay by remember { mutableStateOf("") }
     var startDateBackend by remember { mutableStateOf("") }
     var endDateBackend by remember { mutableStateOf("") }
 
-    // HORAS DE RECORDATORIO (lista)
+    // HORAS DE RECORDATORIO
     val reminderTimes = remember { mutableStateListOf<String>() }
 
     val formas = listOf("Cápsula", "Tableta", "Solución", "Gotas")
@@ -98,24 +93,6 @@ fun AddMedicineScreen(
             Color(0xFF1565C0)
         )
     )
-
-    // Helpers para abrir DatePicker y TimePicker
-    fun pickDate(onPicked: (display: String, backend: String) -> Unit) {
-        val c = Calendar.getInstance()
-        DatePickerDialog(
-            context,
-            { _, year, month, dayOfMonth ->
-                val cal = Calendar.getInstance()
-                cal.set(year, month, dayOfMonth)
-                val display = dateFormatDisplay.format(cal.time)
-                val backend = dateFormatBackend.format(cal.time)
-                onPicked(display, backend)
-            },
-            c.get(Calendar.YEAR),
-            c.get(Calendar.MONTH),
-            c.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
 
     Scaffold(
         topBar = {
@@ -171,10 +148,10 @@ fun AddMedicineScreen(
                         }
 
                         val success = createMedicine(
-                            baseUrl = "$BASE_URL/registerMed",
+                            baseUrl = "$backUrl/registerMed",
                             nombre = medicineName,
                             cantidad = amount,
-                            forma = formas[selectedForm],
+                            tipo = formas[selectedForm],
                             fechaInicio = startDateBackend,
                             fechaFin = endDateBackend,
                             horas = reminderTimes.toList(),
@@ -241,7 +218,12 @@ fun AddMedicineScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Azul,
+                    errorBorderColor = Color.Red,
+                    cursorColor = Azul,
+                )
             )
 
             // CANTIDAD
@@ -268,6 +250,11 @@ fun AddMedicineScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Azul,
+                        errorBorderColor = Color.Red,
+                        cursorColor = Azul,
+                    ),
                     trailingIcon = {
                         Box(
                             modifier = Modifier
@@ -429,7 +416,7 @@ suspend fun createMedicine(
     baseUrl: String,
     nombre: String,
     cantidad: String,
-    forma: String,
+    tipo: String,
     fechaInicio: String,
     fechaFin: String,
     horas: List<String>,
@@ -442,10 +429,10 @@ suspend fun createMedicine(
             val bodyJson = JSONObject().apply {
                 put("nombre", nombre)
                 put("cantidad", cantInt)
-                put("forma", forma)
+                put("forma", tipo)
                 put("fecha_inicio", fechaInicio)
                 put("fecha_fin", fechaFin)
-                put("horas_recordatorio", horas)
+                put("horas_recordatorio", JSONArray(horas))
                 put("id_usuario", idUsuario)
             }
 

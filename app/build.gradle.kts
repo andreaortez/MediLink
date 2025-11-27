@@ -23,6 +23,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "USERS_URL", "\"http://10.0.2.2:3000/users\"")
+            buildConfigField("String", "MEDS_URL", "\"http://10.0.2.2:3000/meds\"")
+            isMinifyEnabled = false
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -41,6 +46,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
