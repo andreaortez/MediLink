@@ -1,4 +1,4 @@
-package com.example.medilink.ui.Components
+package com.example.medilink.ui.components
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,11 +8,9 @@ import java.util.Calendar
 
 // Colores
 import com.example.medilink.ui.theme.Celeste
-import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.Azul
 import com.example.medilink.ui.theme.AzulOscuro
-import com.example.medilink.ui.theme.CelesteClaro
 import com.example.medilink.ui.theme.CelesteVivido2
 
 @OptIn(ExperimentalMaterial3Api::class)

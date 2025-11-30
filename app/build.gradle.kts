@@ -1,5 +1,3 @@
-
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,12 +8,13 @@ plugins {
 
 android {
     namespace = "com.example.medilink"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.medilink"
         minSdk = 25
-        targetSdk = 34
+        //noinspection EditedTargetSdkVersion
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -26,6 +25,7 @@ android {
         debug {
             buildConfigField("String", "USERS_URL", "\"http://10.0.2.2:3000/users\"")
             buildConfigField("String", "MEDS_URL", "\"http://10.0.2.2:3000/meds\"")
+            buildConfigField("String", "ALERTS_URL", "\"http://10.0.2.2:3000/alerts\"")
             isMinifyEnabled = false
         }
         release {
@@ -54,24 +54,23 @@ android {
 }
 
 dependencies {
-    // BOM de Compose
+    implementation(libs.androidx.compose.material)
     val composeBom = platform("androidx.compose:compose-bom:2024.01.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
     // --- Compose + Activity  ---
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui:1.9.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.9.0")
+    implementation("androidx.compose.material3:material3:1.0.0")
 
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.activity:activity-ktx:1.9.3")
-
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
-    // --- Resto de librerías usando el catalog---
+    // --- Otras librerías ---
     implementation("com.google.android.material:material:1.12.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -82,6 +81,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
+    // Dependencias de pruebas
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

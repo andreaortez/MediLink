@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.lifecycle.lifecycleScope
-import com.example.medilink.BuildConfig
 import com.example.medilink.R
 import com.example.medilink.SessionManager
 import java.time.LocalDate
@@ -31,6 +30,14 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.TimeZone
+import com.example.medilink.BuildConfig
+
+data class Alert(
+    val id: String,
+    val mensaje: String,
+    val gravedad: String,
+    val estado: String
+)
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var rvMedicines: RecyclerView
@@ -295,3 +302,5 @@ suspend fun obtenerRecordatoriosHome(
     Log.d("HomeDebug", "Reminders construidos: ${resultado.size}")
     resultado
 }
+
+//Alertas
