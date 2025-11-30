@@ -1,7 +1,6 @@
-package com.example.medilink.ui.Components
+package com.example.medilink.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,8 +38,6 @@ import com.example.medilink.ui.theme.Azul
 import com.example.medilink.ui.theme.AzulOscuro
 import com.example.medilink.ui.theme.CelesteClaro
 import com.example.medilink.ui.theme.CelesteVivido2
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
