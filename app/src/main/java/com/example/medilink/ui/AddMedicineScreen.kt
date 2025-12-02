@@ -1,8 +1,6 @@
 package com.example.medilink.ui
 
 import com.example.medilink.BuildConfig
-import android.app.DatePickerDialog
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,22 +32,20 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 //components
-import com.example.medilink.ui.Components.MedicineFormChip
-import com.example.medilink.ui.Components.TimeReminderCard
-import com.example.medilink.ui.Components.DatePickerRange
-import com.example.medilink.ui.Components.DialTimePicker
+import com.example.medilink.ui.components.MedicineFormChip
+import com.example.medilink.ui.components.TimeReminderCard
+import com.example.medilink.ui.components.DatePickerRange
+import com.example.medilink.ui.components.DialTimePicker
 
 // Colores
 import com.example.medilink.ui.theme.CelesteVivido
-import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.Azul
 import com.example.medilink.ui.theme.AzulOscuro
 import org.json.JSONArray
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

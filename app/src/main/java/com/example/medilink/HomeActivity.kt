@@ -1,4 +1,4 @@
-package com.example.medilink.ui
+package com.example.medilink
 
 import DayCalendarAdapter
 import DayUi
@@ -15,22 +15,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.lifecycle.lifecycleScope
-import com.example.medilink.BuildConfig
-import com.example.medilink.R
-import com.example.medilink.SessionManager
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.TimeZone
+import com.example.medilink.ui.ChatBotActivity
+import com.example.medilink.ui.MedicineUi
+import com.example.medilink.ui.MedicinesAdapter
+
+data class Alert(
+    val id: String,
+    val mensaje: String,
+    val gravedad: String,
+    val estado: String
+)
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var rvMedicines: RecyclerView
@@ -41,6 +47,13 @@ class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        //tabs
+        val navUser = findViewById<ImageView>(R.id.navUser)
+        navUser.setOnClickListener {
+            val intent = Intent(this, MyProfileActivity::class.java)
+            startActivity(intent)
+        }
 
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
         val tvToday = findViewById<TextView>(R.id.tvToday)
@@ -295,3 +308,5 @@ suspend fun obtenerRecordatoriosHome(
     Log.d("HomeDebug", "Reminders construidos: ${resultado.size}")
     resultado
 }
+
+//Alertas

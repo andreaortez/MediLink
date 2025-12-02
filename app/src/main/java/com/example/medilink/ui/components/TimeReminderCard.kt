@@ -1,10 +1,9 @@
-package com.example.medilink.ui.Components
+package com.example.medilink.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,12 +15,10 @@ import com.example.medilink.ui.theme.CelesteClaro
 import com.example.medilink.ui.theme.CelesteVivido2
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.medilink.ui.AddMedicineScreen
 
 @Composable
 fun TimeReminderCard(

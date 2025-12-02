@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
-import com.example.medilink.ui.HomeActivity
 import com.example.medilink.ui.login.Login
 
 
@@ -25,8 +24,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         loginButton.setOnClickListener {
-           val login = Intent(this, Login::class.java)
-            startActivity(login)
+            val login = Intent(this, Login::class.java)
+           startActivity(login)
 
 
         }
