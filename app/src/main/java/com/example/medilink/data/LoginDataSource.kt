@@ -10,7 +10,6 @@ import java.util.UUID
 
 class LoginDataSource {
 
-    // IMPORTANTE: desde el emulador, "localhost" de tu PC es 10.0.2.2
     private val baseUrl = "http://10.0.2.2:3000"
 
     fun login(username: String, password: String): Result<LoggedInUser> {
@@ -54,9 +53,15 @@ class LoginDataSource {
 
                 val nombre = userJson?.optString("nombre", username) ?: username
 
+                val apellido = userJson?.optString("apellido", username) ?: username
+
+                val tipoUsuario = userJson?.optString("tipoUsuario", username) ?: username
+
                 val loggedInUser = LoggedInUser(
                     userId = userId,
-                    displayName = nombre
+                    displayName = nombre,
+                    lastName = apellido,
+                    userType = tipoUsuario
                 )
 
                 return Result.Success(loggedInUser)

@@ -50,7 +50,9 @@ class Login : AppCompatActivity() {
                 SessionManager.saveUserSession(
                     context = this,
                     userId = result.success.userId,
-                    userName = result.success.displayName
+                    userName = result.success.displayName,
+                    userLastName = result.success.lastName,
+                    userType = result.success.userType
                 )
 
                 updateUiWithUser(result.success)
