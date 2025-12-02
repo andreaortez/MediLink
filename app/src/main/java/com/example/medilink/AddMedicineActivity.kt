@@ -1,10 +1,11 @@
-package com.example.medilink.ui
+package com.example.medilink
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
-import com.example.medilink.SessionManager
+import com.example.medilink.ui.AddMedicineScreen
+import com.example.medilink.ui.MedicineUi
 
 class AddMedicineActivity : ComponentActivity() {
 
@@ -13,6 +14,11 @@ class AddMedicineActivity : ComponentActivity() {
 
         val med : MedicineUi? = intent.getParcelableExtra("extra_medicine")
         val id = SessionManager.getUserId(this)
+
+        if (id == null) {
+            finish()
+            return
+        }
 
         setContent {
             MaterialTheme {
