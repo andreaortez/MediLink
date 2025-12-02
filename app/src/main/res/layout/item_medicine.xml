@@ -46,9 +46,9 @@
             android:src="@drawable/ic_edit"
             android:background="@android:color/transparent"
             android:contentDescription="Editar"
-            android:tint="#012248"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:tint="#012248" />
 
         <!-- Hora -->
         <TextView
