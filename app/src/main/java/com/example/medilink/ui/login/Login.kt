@@ -10,6 +10,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModelProvider
 import com.example.medilink.ChooseUser
 import com.example.medilink.MainActivity
@@ -17,6 +20,7 @@ import com.example.medilink.HomeActivity
 import com.example.medilink.R
 import com.google.android.material.textfield.TextInputLayout
 import com.example.medilink.SessionManager
+import com.example.medilink.ui.VitalSignsScreen
 
 class Login : AppCompatActivity() {
 
@@ -140,3 +144,6 @@ fun EditText.afterTextChanged(afterTextChanged: (String) -> Unit) {
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
     })
 }
+
+
+

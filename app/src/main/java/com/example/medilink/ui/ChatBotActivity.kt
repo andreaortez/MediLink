@@ -21,18 +21,38 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medilink.BuildConfig
 import com.example.medilink.data.ApiClient
 import com.example.medilink.data.ChatRequest
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 
 class ChatBotActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val bpm = intent.getStringExtra(BPM)
+        val pressure = intent.getStringExtra(PRESSURE)
+        val temperature = intent.getStringExtra(TEMPERATURE)
         setContent {
             MaterialTheme {
-                ChatBotScreen(onBackClick = { finish() })
+                ChatBotScreen(onBackClick = { finish() },
+                    initialBpm = bpm,
+                    initialPressure = pressure,
+                    initialTemperature = temperature)
             }
         }
+    }
+    companion object {
+        const val BPM = "BPM"
+        const val PRESSURE = "PRESSURE"
+        const val TEMPERATURE = "TEMPERATURE"
     }
 }
 
@@ -44,7 +64,11 @@ data class ChatMessage(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatBotScreen(onBackClick: () -> Unit) {
+fun ChatBotScreen(onBackClick: () -> Unit,
+                  initialBpm: String? = null,
+                  initialPressure: String? = null,
+                  initialTemperature: String? = null) {
+
 
     val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -63,6 +87,80 @@ fun ChatBotScreen(onBackClick: () -> Unit) {
             )
         )
     }
+
+    //generación de analisis en caso de que se llame desde el sensor
+    LaunchedEffect(Unit) {
+        if (!initialBpm.isNullOrBlank()
+            && !initialPressure.isNullOrBlank()
+            && !initialTemperature.isNullOrBlank()
+        ) {
+
+            val typingMessage = ChatMessage(
+                text = "Escribiendo...",
+                fromUser = false,
+                isTyping = true
+            )
+            messages.add(typingMessage)
+
+            val resultText = withContext(Dispatchers.IO) {
+                try {
+
+                    val bodyJson = JSONObject().apply {
+                        put("bpm", initialBpm)
+                        put("temperatura_corporal", initialTemperature)
+                        put("presion_arterial", initialPressure)
+                    }
+                    print(BuildConfig.CHATBOT_URL + "/generateHealthReport")
+                    val url = URL(BuildConfig.CHATBOT_URL + "/generateHealthReport")
+                    val conn = (url.openConnection() as HttpURLConnection).apply {
+                        requestMethod = "POST"
+                        connectTimeout = 10_000
+                        readTimeout = 10_000
+                        doOutput = true
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    }
+
+                    conn.outputStream.use { os ->
+                        val input = bodyJson.toString().toByteArray(Charsets.UTF_8)
+                        os.write(input, 0, input.size)
+                    }
+
+                    val responseCode = conn.responseCode
+                    val responseText = if (responseCode in 200..299) {
+                        conn.inputStream.bufferedReader().use { it.readText() }
+                    } else {
+                        conn.errorStream?.bufferedReader()?.use { it.readText() }
+                            ?: "Error HTTP $responseCode"
+                    }
+                    conn.disconnect()
+
+                    val json = JSONObject(responseText)
+                    json.optString("reporte", responseText)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    "Lo siento, hubo un error al analizar tus signos vitales 😔"
+                }
+            }
+
+            val index = messages.indexOf(typingMessage)
+            if (index != -1) {
+                messages[index] = ChatMessage(
+                    text = resultText,
+                    fromUser = false,
+                    isTyping = false
+                )
+            } else {
+                messages.add(
+                    ChatMessage(
+                        text = resultText,
+                        fromUser = false,
+                        isTyping = false
+                    )
+                )
+            }
+        }
+    }
+
 
     Scaffold(
         topBar = {

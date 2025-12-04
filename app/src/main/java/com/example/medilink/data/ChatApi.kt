@@ -9,6 +9,7 @@ data class ChatRequest(
     val userPrompt: String
 )
 
+
 data class ChatBotData(
     val respuesta: String?,
     val consejos: List<String>?
@@ -24,4 +25,5 @@ interface ChatApi {
     // POST http://10.0.2.2:3000/chatbot/request
     @POST("chatbot/request")
     suspend fun sendMessage(@Body request: ChatRequest): ChatResponse
+
 }
