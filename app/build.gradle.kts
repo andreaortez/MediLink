@@ -26,6 +26,7 @@ android {
         debug {
             buildConfigField("String", "USERS_URL", "\"http://10.0.2.2:3000/users\"")
             buildConfigField("String", "MEDS_URL", "\"http://10.0.2.2:3000/meds\"")
+            buildConfigField("String", "CHATBOT_URL", "\"http://10.0.2.2:3000/chatbot\"")
             isMinifyEnabled = false
         }
         release {
@@ -56,6 +57,7 @@ android {
 dependencies {
     // --- Compose BOM (más reciente) ---
     val composeBom = platform("androidx.compose:compose-bom:2024.09.00")
+
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
@@ -64,7 +66,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.animation:animation")
-
+    implementation("androidx.compose.material:material-icons-extended")
     // Activity + Compose
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.activity:activity-ktx:1.9.3")

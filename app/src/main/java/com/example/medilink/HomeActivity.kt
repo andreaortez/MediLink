@@ -30,6 +30,7 @@ import java.util.TimeZone
 import com.example.medilink.ui.ChatBotActivity
 import com.example.medilink.ui.MedicineUi
 import com.example.medilink.ui.MedicinesAdapter
+import com.example.medilink.ui.VitalSigns.VitalSignsActivity
 
 data class Alert(
     val id: String,
@@ -180,6 +181,10 @@ class HomeActivity : AppCompatActivity() {
 
     fun AddMedicine(view: View) {
         val intent = Intent(this, AddMedicineActivity::class.java)
+        startActivity(intent)
+    }
+    fun openMonitor(view: View) {
+        val intent = Intent(this, VitalSignsActivity::class.java)
         startActivity(intent)
     }
 

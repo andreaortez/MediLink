@@ -19,6 +19,9 @@
             android:name=".AddMedicineActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.VitalSigns.VitalSignsActivity"
+            android:exported="false" />
+        <activity
             android:name=".MyProfileActivity"
             android:exported="false" />
         <activity
