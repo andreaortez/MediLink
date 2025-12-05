@@ -23,13 +23,11 @@ class LoginDataSource {
                 setRequestProperty("Content-Type", "application/json; charset=UTF-8")
             }
 
-            // JSON EXACTO que envías en Postman
             val jsonBody = JSONObject().apply {
                 put("correo", username)
                 put("contraseña", password)
             }.toString()
 
-            // Enviar body
             connection.outputStream.use { os ->
                 val bytes = jsonBody.toByteArray(StandardCharsets.UTF_8)
                 os.write(bytes, 0, bytes.size)
@@ -38,35 +36,37 @@ class LoginDataSource {
             val code = connection.responseCode
 
             if (code == HttpURLConnection.HTTP_OK) {
-                // Leer respuesta OK
+
                 val responseText =
                     connection.inputStream.bufferedReader().use { it.readText() }
 
                 val json = JSONObject(responseText)
 
-                // { "message": "Sesión iniciada", "user": [ { ... } ] }
                 val userJson = json.optJSONArray("user")?.optJSONObject(0)
                     ?: json.optJSONObject("user")
 
-                val userId = userJson?.optString("_id", UUID.randomUUID().toString())
-                    ?: UUID.randomUUID().toString()
-
+                val userId = userJson?.optString("_id") ?: UUID.randomUUID().toString()
                 val nombre = userJson?.optString("nombre", username) ?: username
+                val apellido = userJson?.optString("apellido", "") ?: ""
+                val tipoUsuario = userJson?.optString("tipoUsuario", "") ?: ""
 
-                val apellido = userJson?.optString("apellido", username) ?: username
-
-                val tipoUsuario = userJson?.optString("tipoUsuario", username) ?: username
+                val phone = userJson?.optString("num_telefono", null)
+                val age: Int? = if (userJson != null && userJson.has("edad")) {
+                    userJson.optInt("edad")
+                } else null
 
                 val loggedInUser = LoggedInUser(
                     userId = userId,
                     displayName = nombre,
                     lastName = apellido,
-                    userType = tipoUsuario
+                    userType = tipoUsuario,
+                    email = username,
+                    phone = phone,
+                    age = age
                 )
 
                 return Result.Success(loggedInUser)
             } else {
-                // Intentar leer mensaje de error del backend
                 val errorMsg = try {
                     val errText =
                         connection.errorStream?.bufferedReader()?.use { it.readText() }
@@ -87,6 +87,5 @@ class LoginDataSource {
         }
     }
 
-    fun logout() {
-    }
+    fun logout() {}
 }

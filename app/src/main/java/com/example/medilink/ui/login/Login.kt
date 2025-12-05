@@ -47,18 +47,24 @@ class Login : AppCompatActivity() {
                 showLoginFailed(result.error)
             }
             if (result.success != null) {
+                val user = result.success
+
                 SessionManager.saveUserSession(
                     context = this,
-                    userId = result.success.userId,
-                    userName = result.success.displayName,
-                    userLastName = result.success.lastName,
-                    userType = result.success.userType
+                    userId = user.userId,
+                    userName = user.displayName,
+                    userLastName = user.lastName,
+                    userType = user.userType,
+                    userEmail = user.email,
+                    phone = user.phone,
+                    age = user.age
                 )
 
-                updateUiWithUser(result.success)
+                updateUiWithUser(user)
                 setResult(Activity.RESULT_OK)
                 homePage()
             }
+
         }
 
 
