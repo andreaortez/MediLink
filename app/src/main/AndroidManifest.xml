@@ -61,7 +61,7 @@
         <activity
             android:name=".ui.ChatBotActivity"
             android:exported="false" />
-
+        <activity android:name=".EditProfileActivity" />
     </application>
 
 </manifest>

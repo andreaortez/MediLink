@@ -55,12 +55,14 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
     // --- Compose BOM (más reciente) ---
     val composeBom = platform("androidx.compose:compose-bom:2024.09.00")
 
     implementation(composeBom)
     androidTestImplementation(composeBom)
-
+    implementation("androidx.compose.material:material-icons-extended")
     // --- Compose ---
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
