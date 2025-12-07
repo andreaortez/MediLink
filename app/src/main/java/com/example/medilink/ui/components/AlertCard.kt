@@ -34,6 +34,7 @@ fun AlertCard(
     val buttonTextColor = if (alert.gravedad == "CRITICA") Color.White else AzulNegro
 
     AlertDialog(
+        containerColor = cardBackgroundColor,
         icon = {
             Icon(Icons.Default.Notifications, contentDescription = "Notificacion")
         },

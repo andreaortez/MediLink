@@ -39,15 +39,40 @@ data class Alert(
     val estado: String
 )
 
+data class AdultoVinculado(
+    val id: String,
+    val nombre: String,
+    val apellido: String
+)
+
+data class HomeReminder(
+    val medId: String,
+    val nombre: String,
+    val proximoRecordatorioTexto: String
+)
+
 class HomeActivity : AppCompatActivity() {
     private lateinit var rvMedicines: RecyclerView
+    private lateinit var tvEmptyMedicines: TextView
     private lateinit var medsBaseUrl: String
+    private lateinit var usersBaseUrl: String
+    private var selectedDateIso: String = ""
+
+    private var selectedAdultId: String? = null
+    private var userType: String = ""
+    private var currentUserId: String = ""
 
     @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        medsBaseUrl = BuildConfig.MEDS_URL
+        usersBaseUrl = BuildConfig.USERS_URL
+
+        userType = SessionManager.getUserType(this) ?: ""
+        currentUserId = SessionManager.getUserId(this) ?: ""
 
         //tabs
         val navUser = findViewById<ImageView>(R.id.navUser)
@@ -56,14 +81,25 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        //spinner
+        val spinnerAdultos = findViewById<android.widget.Spinner>(R.id.spinnerAdultos)
+
+        if (!userType.contains("FAMILIAR", ignoreCase = true)) {
+            spinnerAdultos.visibility = View.GONE
+        }
+
         val rvDays = findViewById<RecyclerView>(R.id.rvDays)
         val tvToday = findViewById<TextView>(R.id.tvToday)
 
         rvMedicines = findViewById<RecyclerView>(R.id.rvMedicines)
         rvMedicines.layoutManager = LinearLayoutManager(this)
 
+        tvEmptyMedicines = findViewById(R.id.tvEmptyMedicines)
+
         val localeEs = Locale("es", "ES")
         val today = LocalDate.now()
+
+        selectedDateIso = today.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
         val navHeart = findViewById<ImageView>(R.id.navHeart)
         navHeart.setOnClickListener {
@@ -93,6 +129,44 @@ class HomeActivity : AppCompatActivity() {
                 tvToday.text = "Hoy, " + selectedDate.format(
                     DateTimeFormatter.ofPattern("dd MMM", localeEs)
                 )
+
+                // 🔹 Actualizamos la fecha para el backend
+                selectedDateIso = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+
+                lifecycleScope.launch {
+                    val userId = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                        selectedAdultId ?: currentUserId
+                    } else {
+                        currentUserId
+                    }
+
+                    val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId, selectedDateIso)
+
+                    val medicines = reminders.map { reminder ->
+                        MedicineUi(
+                            name = reminder.nombre,
+                            timeText = reminder.proximoRecordatorioTexto,
+                            extraText = ""
+                        )
+                    }
+
+                    if (medicines.isEmpty()) {
+                        rvMedicines.visibility = View.GONE
+                        tvEmptyMedicines.visibility = View.VISIBLE
+                    } else {
+                        rvMedicines.visibility = View.VISIBLE
+                        tvEmptyMedicines.visibility = View.GONE
+                        rvMedicines.adapter = MedicinesAdapter(
+                            items = medicines,
+                            onCheckedChange = { med, checked ->
+                                Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
+                            },
+                            onEditClick = { med ->
+                                openEditMedicine(med)
+                            }
+                        )
+                    }
+                }
             },
             initialSelectedIndex = centerIndex
         )
@@ -103,15 +177,59 @@ class HomeActivity : AppCompatActivity() {
             rvDays.scrollToPosition(centerIndex)
         }
 
-        medsBaseUrl = BuildConfig.MEDS_URL
-        val userId = SessionManager.getUserId(this) ?: ""
-
-        Log.d("HomeDebug", "medsBaseUrl = $medsBaseUrl")
-        Log.d("HomeDebug", "userId = '$userId'")
-
-        if (userId.isNotBlank()) {
+        if (userType.contains("FAMILIAR", ignoreCase = true) && currentUserId.isNotBlank()) {
             lifecycleScope.launch {
-                val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId)
+                val adultos = obtenerAdultosVinculados(usersBaseUrl, currentUserId)
+
+                if (adultos.isNotEmpty()) {
+                    // llenar spinner
+                    val nombres = adultos.map { "${it.nombre} ${it.apellido}" }
+                    val adapterSpinner = android.widget.ArrayAdapter(
+                        this@HomeActivity,
+                        android.R.layout.simple_spinner_item,
+                        nombres
+                    ).apply {
+                        setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    }
+                    spinnerAdultos.adapter = adapterSpinner
+                    spinnerAdultos.visibility = View.VISIBLE
+
+                    // seleccionar primero por defecto
+                    selectedAdultId = adultos.first().id
+
+                    spinnerAdultos.onItemSelectedListener =
+                        object : android.widget.AdapterView.OnItemSelectedListener {
+                            override fun onItemSelected(
+                                parent: android.widget.AdapterView<*>?,
+                                view: View?,
+                                position: Int,
+                                id: Long
+                            ) {
+                                selectedAdultId = adultos[position].id
+                                // recargar medicamentos para ese adulto y fecha actual
+                                loadMedicines()
+                            }
+
+                            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+                                // nada
+                            }
+                        }
+                } else {
+                    spinnerAdultos.visibility = View.GONE
+                    selectedAdultId = null
+                }
+            }
+        }
+
+        if (currentUserId.isNotBlank()) {
+            lifecycleScope.launch {
+                val userId = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+                    selectedAdultId ?: currentUserId
+                } else {
+                    currentUserId
+                }
+
+                val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId, selectedDateIso)
 
                 val medicines = reminders.map { reminder ->
                     MedicineUi(
@@ -121,17 +239,24 @@ class HomeActivity : AppCompatActivity() {
                     )
                 }
 
-                val medicinesAdapter = MedicinesAdapter(
-                    items = medicines,
-                    onCheckedChange = { med, checked ->
-                        Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
-                    },
-                    onEditClick = { med ->
-                        openEditMedicine(med)
-                    }
-                )
+                if (medicines.isEmpty()) {
+                    rvMedicines.visibility = View.GONE
+                    tvEmptyMedicines.visibility = View.VISIBLE
+                } else {
+                    rvMedicines.visibility = View.VISIBLE
+                    tvEmptyMedicines.visibility = View.GONE
 
-                rvMedicines.adapter = medicinesAdapter
+                    val medicinesAdapter = MedicinesAdapter(
+                        items = medicines,
+                        onCheckedChange = { med, checked ->
+                            Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
+                        },
+                        onEditClick = { med ->
+                            openEditMedicine(med)
+                        }
+                    )
+                    rvMedicines.adapter = medicinesAdapter
+                }
             }
         } else {
             Log.d("HomeActivity", "No hay usuario en sesión, no se cargan medicamentos")
@@ -144,22 +269,31 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun loadMedicines() {
-        val userId = SessionManager.getUserId(this) ?: ""
+        if (currentUserId.isBlank()) return
 
-        Log.d("HomeDebug", "loadMedicines -> userId = '$userId', medsBaseUrl = $medsBaseUrl")
+        val userId = if (userType.contains("FAMILIAR", ignoreCase = true)) {
+            selectedAdultId ?: currentUserId
+        } else {
+            currentUserId
+        }
 
-        if (userId.isNotBlank()) {
-            lifecycleScope.launch {
-                val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId)
-                Log.d("HomeDebug", "Reminders recibidos en loadMedicines: ${reminders.size}")
+        lifecycleScope.launch {
+            val reminders = obtenerRecordatoriosHome(medsBaseUrl, userId, selectedDateIso)
 
-                val medicines = reminders.map { reminder ->
-                    MedicineUi(
-                        name = reminder.nombre,
-                        timeText = reminder.proximoRecordatorioTexto,
-                        extraText = ""
-                    )
-                }
+            val medicines = reminders.map { reminder ->
+                MedicineUi(
+                    name = reminder.nombre,
+                    timeText = reminder.proximoRecordatorioTexto,
+                    extraText = ""
+                )
+            }
+
+            if (medicines.isEmpty()) {
+                rvMedicines.visibility = View.GONE
+                tvEmptyMedicines.visibility = View.VISIBLE
+            } else {
+                rvMedicines.visibility = View.VISIBLE
+                tvEmptyMedicines.visibility = View.GONE
 
                 val medicinesAdapter = MedicinesAdapter(
                     items = medicines,
@@ -173,11 +307,8 @@ class HomeActivity : AppCompatActivity() {
 
                 rvMedicines.adapter = medicinesAdapter
             }
-        } else {
-            Log.d("HomeDebug", "No hay userId en sesión, no se cargan medicamentos")
         }
     }
-
 
     fun AddMedicine(view: View) {
         val intent = Intent(this, AddMedicineActivity::class.java)
@@ -196,56 +327,17 @@ class HomeActivity : AppCompatActivity() {
 }
 
 
-data class HomeReminder(
-    val medId: String,
-    val nombre: String,
-    val proximoRecordatorioTexto: String
-)
 
-fun formatearProximoRecordatorio(iso: String): String {
-    val posiblesFormatos = listOf(
-        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss"
-    )
-
-    var date: java.util.Date? = null
-    for (f in posiblesFormatos) {
-        try {
-            val parser = SimpleDateFormat(f, Locale.getDefault())
-            parser.timeZone = TimeZone.getTimeZone("UTC")
-            date = parser.parse(iso)
-            if (date != null) break
-        } catch (_: Exception) { }
-    }
-
-    if (date == null) return ""
-
-    val hoy = Calendar.getInstance()
-    val otro = Calendar.getInstance().apply { time = date }
-
-    val mismoDia = hoy.get(Calendar.YEAR) == otro.get(Calendar.YEAR) &&
-            hoy.get(Calendar.DAY_OF_YEAR) == otro.get(Calendar.DAY_OF_YEAR)
-
-    val horaFormat = SimpleDateFormat("h:mm a", Locale("es", "ES"))
-    val horaTexto = horaFormat.format(date).lowercase()
-
-    return if (mismoDia) {
-        "Hoy a las $horaTexto"
-    } else {
-        val fechaFormat = SimpleDateFormat("d MMM", Locale("es", "ES"))
-        "El ${fechaFormat.format(date)} a las $horaTexto"
-    }
-}
 
 suspend fun obtenerRecordatoriosHome(
     medsBaseUrl: String,
-    userId: String
+    userId: String,
+    selectedDate: String
 ): List<HomeReminder> = withContext(Dispatchers.IO) {
     val resultado = mutableListOf<HomeReminder>()
 
     try {
-        val urlMeds = URL("$medsBaseUrl/listarMedicamentosActivos/$userId")
+        val urlMeds = URL("$medsBaseUrl/by-date-familiar/$userId?date=$selectedDate")
         val connMeds = (urlMeds.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 10_000
@@ -312,6 +404,51 @@ suspend fun obtenerRecordatoriosHome(
 
     Log.d("HomeDebug", "Reminders construidos: ${resultado.size}")
     resultado
+}
+
+suspend fun obtenerAdultosVinculados(
+    usersBaseUrl: String,
+    familiarId: String
+): List<AdultoVinculado> = withContext(Dispatchers.IO) {
+    try {
+        val url = URL("$usersBaseUrl/$familiarId/adultos-mayores")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+        }
+
+        val code = conn.responseCode
+        if (code !in 200..299) {
+            val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
+            Log.e("HomeDebug", "Error obteniendo adultos-mayores: $err")
+            conn.disconnect()
+            return@withContext emptyList()
+        }
+
+        val text = conn.inputStream.bufferedReader().use { it.readText() }
+        conn.disconnect()
+
+        val root = JSONObject(text)
+        val arr = root.optJSONArray("adultosMayores") ?: return@withContext emptyList()
+
+        val resultado = mutableListOf<AdultoVinculado>()
+        for (i in 0 until arr.length()) {
+            val item = arr.getJSONObject(i)
+            resultado.add(
+                AdultoVinculado(
+                    id = item.optString("_id", ""),
+                    nombre = item.optString("nombre", ""),
+                    apellido = item.optString("apellido", "")
+                )
+            )
+        }
+
+        resultado.filter { it.id.isNotBlank() && it.nombre.isNotBlank() }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
+    }
 }
 
 //Alertas
