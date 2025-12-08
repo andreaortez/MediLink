@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.medilink"
-        minSdk = 25
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -101,6 +101,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     //libreria de health monitor
-    implementation("androidx.health.connect:connect-client:1.1.0")
+    implementation("androidx.health.connect:connect-client:1.0.0-alpha11")
 
 }
