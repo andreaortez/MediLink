@@ -19,6 +19,7 @@ import com.example.medilink.ui.theme.CelesteVivido
 import com.example.medilink.ui.theme.AzulNegro
 import com.example.medilink.ui.theme.AzulOscuro
 import com.example.medilink.ui.theme.CelesteClaro
+import androidx.compose.ui.text.style.TextAlign
 
 data class Alert(
     val id: String,
@@ -59,11 +60,11 @@ fun AlertCard(
                 Text(
                     text = "Recordatorio de medicamento",
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 🔹 Chip centrado horizontalmente
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
@@ -90,7 +91,8 @@ fun AlertCard(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = AzulNegro,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                textAlign = TextAlign.Center
             )
         },
         confirmButton = {

@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
 
-
 class MedicinesAdapter(
     private val items: List<MedicineUi>,
     private val onCheckedChange: (MedicineUi, Boolean) -> Unit,
@@ -41,9 +40,10 @@ class MedicinesAdapter(
         holder.tvTitle.text = item.name
         holder.tvTime.text = item.timeText
 
-
         holder.tvQuantity.text = "Cantidad: ${item.quantity}"
 
+        holder.cbTaken.setOnCheckedChangeListener(null)
+        holder.cbTaken.isChecked = item.taken
 
 
 
