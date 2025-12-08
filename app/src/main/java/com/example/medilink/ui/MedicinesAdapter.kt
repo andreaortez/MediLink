@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
 
+
 class MedicinesAdapter(
     private val items: List<MedicineUi>,
     private val onCheckedChange: (MedicineUi, Boolean) -> Unit,
