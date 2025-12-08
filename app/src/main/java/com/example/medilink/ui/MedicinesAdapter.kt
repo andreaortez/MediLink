@@ -9,7 +9,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
-import 
 
 class MedicinesAdapter(
     private val items: List<MedicineUi>,
@@ -41,10 +40,8 @@ class MedicinesAdapter(
         holder.tvTitle.text = item.name
         holder.tvTime.text = item.timeText
 
-        // Cantidad formateada a texto (ej: "Cantidad: 2")
         holder.tvQuantity.text = "Cantidad: ${item.quantity}"
 
-        // Evitar que el listener se dispare al setear isChecked
         holder.cbTaken.setOnCheckedChangeListener(null)
         holder.cbTaken.isChecked = item.taken
 
