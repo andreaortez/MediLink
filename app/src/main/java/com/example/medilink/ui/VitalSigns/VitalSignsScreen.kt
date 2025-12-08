@@ -88,25 +88,28 @@ fun VitalSignsScreen(
             hasPermissions = granted.containsAll(permissions)
         }
 
-        LaunchedEffect(hasPermissions) {
+        LaunchedEffect(Unit) {
             try{
                 val sdkStatus = HealthConnectClient.sdkStatus(context)
-                Log.d("VitalSigns", "codigo : $sdkStatus")
-                val client = HealthConnectClient.getOrCreate(context)
+                if(sdkStatus == 1){
+                    Log.d("VitalSigns", "codigo : $sdkStatus")
+                    val client = HealthConnectClient.getOrCreate(context)
 
-                // 1) Revisar permisos en IO
-                val granted = withContext(Dispatchers.IO) {
-                    client.permissionController.getGrantedPermissions()
-                }
-
-                if (!granted.containsAll(permissions)) {
-
-                    if (!hasPermissions) {
-                        permissionsLauncher.launch(permissions)
+                    // 1) Revisar permisos en IO
+                    val granted = withContext(Dispatchers.IO) {
+                        client.permissionController.getGrantedPermissions()
                     }
 
-                    return@LaunchedEffect
+                    if (!granted.containsAll(permissions)) {
+
+                        if (!hasPermissions) {
+                            permissionsLauncher.launch(permissions)
+                        }
+
+                        return@LaunchedEffect
+                    }
                 }
+
             }catch(e : Exception){
 
             }

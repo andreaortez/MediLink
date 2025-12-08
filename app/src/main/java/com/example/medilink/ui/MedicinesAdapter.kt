@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medilink.R
-import 
+
 
 class MedicinesAdapter(
     private val items: List<MedicineUi>,
