@@ -56,12 +56,18 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VitalSignsScreen(
     onBackClick: () -> Unit = {},
-    onChatbotClick: (bpm: String, pressure: String, temperature: String) -> Unit = { _, _, _ -> },
-    idUsuario: String
+    onChatbotClick: (bpm: String, pressure: String, temperature: String, name: String) -> Unit = { _, _, _, _-> },
+    idUsuario: String,
+    tipoUsuario: String?
 ) {
     Surface(                        
         modifier = Modifier.fillMaxSize(),
@@ -69,9 +75,22 @@ fun VitalSignsScreen(
     var bpm by remember { mutableStateOf("72") }
     var pressure by remember { mutableStateOf("120/80") }
     var temperature by remember { mutableStateOf("36.5") }
-
+        var initialLoad by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    //variables para dropdown
+        val users = remember {
+            mutableStateListOf(
+                idUsuario to "Mis datos",
+            )
+        }
+        val isFamiliar = tipoUsuario == "FAMILIAR"
+        var selectedUserId by remember { mutableStateOf(idUsuario) }
+        var expanded by remember { mutableStateOf(false) }
 
+        val selectedUserName = remember(selectedUserId, users) {
+            users.firstOrNull { it.first == selectedUserId }?.second ?: "Seleccionar"
+        }
+    //permisos para HealthConnect
         val permissions = remember {
             setOf(
                 HealthPermission.getReadPermission(HeartRateRecord::class),
@@ -90,12 +109,14 @@ fun VitalSignsScreen(
 
         LaunchedEffect(Unit) {
             try{
+
+
                 val sdkStatus = HealthConnectClient.sdkStatus(context)
                 if(sdkStatus == 1){
                     Log.d("VitalSigns", "codigo : $sdkStatus")
                     val client = HealthConnectClient.getOrCreate(context)
 
-                    // 1) Revisar permisos en IO
+
                     val granted = withContext(Dispatchers.IO) {
                         client.permissionController.getGrantedPermissions()
                     }
@@ -114,8 +135,9 @@ fun VitalSignsScreen(
 
             }
 
-            // A partir de aquí ya sabemos que SÍ hay permisos concedidos
+
             withContext(Dispatchers.IO) {
+
                 try {
                     val sdkStatus = HealthConnectClient.sdkStatus(context)
 
@@ -124,7 +146,7 @@ fun VitalSignsScreen(
                     ) {
                         val client = HealthConnectClient.getOrCreate(context)
 
-                        // ---- Health Connect ----
+
                         val now = Instant.now()
                         val time = TimeRangeFilter.after(
                             now.minus(1, ChronoUnit.MINUTES)
@@ -178,8 +200,6 @@ fun VitalSignsScreen(
                         }
 
                     } else {
-
-                        // ---- Fallback: /simulate ----
                         val url = URL(BuildConfig.VITALS_URL + "/simulate")
 
                         val bodyJson = JSONObject()
@@ -225,13 +245,14 @@ fun VitalSignsScreen(
                                 temperature = String.format("%.1f", tempValue)
                             }
 
-                            Log.d("VitalSigns", "LLEGUE 9")
+
                         } catch (e: Exception) {
+                            Log.d("VitalSignsUI", "ERROR en carga de familiares")
                             e.printStackTrace()
                         }
                     }
 
-                    // ---- POST a tu backend ----
+                   
                     val bodyJson = JSONObject().apply {
                         put("adultoMayorId", idUsuario)
                         put("bpm", bpm)
@@ -262,11 +283,121 @@ fun VitalSignsScreen(
                     }
                     conn.disconnect()
 
+                    //obtener adultos mayores si es un familiar
+
+                    if(tipoUsuario == "FAMILIAR"){
+
+                        val url = URL(BuildConfig.USERS_URL + "/" + idUsuario + "/adultos-mayores")
+
+                        val conn2 = (url.openConnection() as HttpURLConnection).apply {
+                            requestMethod = "GET"
+                            connectTimeout = 10_000
+                            readTimeout = 10_000
+                            doOutput = false
+                            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        }
+
+                        val responseCode = conn2.responseCode
+                        val responseText = if (responseCode in 200..299) {
+                            conn2.inputStream.bufferedReader().use { it.readText() }
+                        } else {
+                            conn2.errorStream?.bufferedReader()?.use { it.readText() }
+                                ?: "Error HTTP $responseCode"
+                        }
+
+                        //mapear datos
+                        try {
+                            val json = JSONObject(responseText)
+
+                            val adultos = json.optJSONArray("adultosMayores") ?: org.json.JSONArray()
+
+                            for (i in 0 until adultos.length()) {
+                                val adultoObj = adultos.getJSONObject(i)
+
+                                val id = adultoObj.optString("_id")
+                                val nombre = adultoObj.optString("nombre")
+                                val apellido = adultoObj.optString("apellido")
+
+                                // Agregar al dropdown (Pair<String,String>)
+                                // users debe ser mutableStateListOf(...)
+                                if (id.isNotBlank() && users.none { it.first == id }) {
+                                    users.add(id to "$nombre $apellido".trim())
+                                }
+                            }
+
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        conn2.disconnect()
+                    }else{
+
+                    }
+
+
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+                initialLoad = true;
             }
         }
+
+        LaunchedEffect(selectedUserId) {
+            withContext(Dispatchers.IO) {
+                try {
+                    Log.d("VitalSignsUI", "selected Id : "+selectedUserId);
+                    if (initialLoad) {
+                        val url = URL(BuildConfig.VITALS_URL + "/last/" + selectedUserId)
+                        Log.d("VitalSignsUI", BuildConfig.VITALS_URL + "/last/" + selectedUserId);
+                        val bodyJson = JSONObject()
+
+                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                            requestMethod = "GET"
+                            connectTimeout = 10_000
+                            readTimeout = 10_000
+                            doOutput = false
+                            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        }
+
+                        val responseCode = conn.responseCode
+                        val responseText = if (responseCode in 200..299) {
+                            conn.inputStream.bufferedReader().use { it.readText() }
+                        } else {
+                            conn.errorStream?.bufferedReader()?.use { it.readText() }
+                                ?: "Error HTTP $responseCode"
+                        }
+                        conn.disconnect()
+
+
+                        try {
+                            val json = JSONObject(responseText)
+
+                            val bpmValue = json.optInt("bpm", -1)
+                            if (bpmValue != -1) {
+                                bpm = bpmValue.toString()
+                            }
+
+                            val presionValue = json.optString("presion", "")
+                            if (presionValue.isNotBlank()) {
+                                pressure = presionValue
+                            }
+
+                            val tempValue = json.optDouble("temperatura", Double.NaN)
+                            if (!tempValue.isNaN()) {
+                                temperature = String.format("%.1f", tempValue)
+                            }
+
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }catch(e: Exception){
+
+                }
+            }
+        }
+
 
         val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -301,25 +432,61 @@ fun VitalSignsScreen(
                             )
                         }
                     },
+
+                    actions = {
+                        if(isFamiliar) {
+                            Box {
+
+                                TextButton(
+                                    onClick = { expanded = true },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = Color.White
+                                    ),
+                                    modifier = Modifier.padding(end = 6.dp)
+                                ) {
+                                    Text(
+                                        text = selectedUserName,
+                                        maxLines = 1
+                                    )
+                                }
+
+
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    users.forEach { (id, name) ->
+                                        DropdownMenuItem(
+                                            text = { Text(name) },
+                                            onClick = {
+                                                expanded = false
+                                                selectedUserId = id
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
                         titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        navigationIconContentColor = Color.White,
+                        actionIconContentColor = Color.White
                     )
+
                 )
             }
         },
         bottomBar = {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth().background(Color.White)
+                    .fillMaxWidth()
+                    .background(Color.White)
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-
-
-                // Botón para análisis por chatbot
                 OutlinedButton(
                     onClick = {
                         if (bpm.isBlank() || pressure.isBlank() || temperature.isBlank()) {
@@ -329,7 +496,12 @@ fun VitalSignsScreen(
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
-                            onChatbotClick(bpm, pressure, temperature)
+                            val name = if (selectedUserName != "Seleccionar" && selectedUserName != "Mis datos") {
+                                selectedUserName
+                            } else {
+                                ""
+                            }
+                            onChatbotClick(bpm, pressure, temperature, name );
                         }
                     },
                     modifier = Modifier
@@ -362,7 +534,7 @@ fun VitalSignsScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
 
-            // Tarjeta estilo dashboard (Resumen)
+
             SummaryCard(
                 bpm = bpm,
                 pressure = pressure,
@@ -379,7 +551,6 @@ fun VitalSignsScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Card BPM
             VitalInputCard(
                 title = "Frecuencia cardíaca",
                 subtitle = "Latidos por minuto",
@@ -397,7 +568,6 @@ fun VitalSignsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Card presión arterial
             VitalInputCard(
                 title = "Presión arterial",
                 subtitle = "Sistólica / diastólica",
@@ -610,7 +780,8 @@ private fun VitalInputCard(
                         Box(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .width(85.dp).height(53.dp)
+                                .width(85.dp)
+                                .height(53.dp)
                                 .background(
                                     color = CelesteVivido,
                                     shape = RoundedCornerShape(
@@ -643,6 +814,7 @@ private fun VitalInputCard(
 @Composable
 fun VitalSignsScreenPreview() {
     MaterialTheme {
-        VitalSignsScreen(idUsuario = "previewUser")
+        VitalSignsScreen(idUsuario = "previewUser", tipoUsuario = "familiar")
+
     }
 }
