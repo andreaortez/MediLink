@@ -11,7 +11,7 @@ import java.util.UUID
 
 class LoginDataSource {
 
-    private val baseUrl = "http://10.0.2.2:3000"
+
 
     fun login(username: String, password: String): Result<LoggedInUser> {
         try {

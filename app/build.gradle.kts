@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.example.medilink"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.medilink"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -24,6 +24,7 @@ android {
 
     buildTypes {
         debug {
+
             buildConfigField("String", "USERS_URL", "\"http://10.0.2.2:3000/users\"")
             buildConfigField("String", "MEDS_URL", "\"http://10.0.2.2:3000/meds\"")
             buildConfigField("String", "ALERTS_URL", "\"http://10.0.2.2:3000/alerts\"")
@@ -35,7 +36,9 @@ android {
             buildConfigField("String", "MEDS_URL", "\"http://192.168.0.6:3000/meds\"")
             buildConfigField("String", "CHATBOT_URL", "\"http://192.168.0.6:3000/chatbot\"")
             buildConfigField("String", "VITALS_URL", "\"http://192.168.0.6:3000/vitals\"")
-             */
+            buildConfigField("String", "ALERTS_URL", "\"http://192.168.0.6:3000/alerts\"")
+            */
+
             isMinifyEnabled = false
         }
         release {
@@ -109,6 +112,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     //libreria de health monitor
-    implementation("androidx.health.connect:connect-client:1.0.0-alpha11")
+    implementation("androidx.health.connect:connect-client:1.1.0")
 
 }
