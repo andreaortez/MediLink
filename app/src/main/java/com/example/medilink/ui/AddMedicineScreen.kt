@@ -1,6 +1,6 @@
 package com.example.medilink.ui
 
-import android.R.attr.id
+
 import com.example.medilink.BuildConfig
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -88,6 +88,12 @@ fun AddMedicineScreen(
     var adultosMayores by remember { mutableStateOf<List<Usuario>>(emptyList()) }
     var adultoSeleccionado by remember { mutableStateOf<Usuario?>(null) }
     var expanded by remember { mutableStateOf(false) }
+
+    val targetUserId = if (type == "FAMILIAR") {
+        adultoSeleccionado!!.id
+    } else {
+        idUsuario
+    }
 
     if (type == "FAMILIAR") {
         LaunchedEffect(idUsuario) {
@@ -207,7 +213,7 @@ fun AddMedicineScreen(
                                 fechaInicio = startDateBackend,
                                 fechaFin = endDateBackend,
                                 horas = reminderTimes.toList(),
-                                idUsuario = id.toString()
+                                idUsuario = targetUserId
 
                             )
 
@@ -229,7 +235,7 @@ fun AddMedicineScreen(
                                 fechaInicio = startDateBackend,
                                 fechaFin = endDateBackend,
                                 horas = reminderTimes.toList(),
-                                idUsuario = id.toString()
+                                idUsuario = targetUserId
                             )
                         }
 
