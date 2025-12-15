@@ -140,7 +140,8 @@ fun VitalSignsScreen(
                 }
             } catch (e: Exception) {
                 Log.e("VitalSigns", "Health Connect not available, using simulate", e)
-                hasPermissions = false
+
+
                 withContext(Dispatchers.IO) {
                     runCatching {
                         val url = URL(BuildConfig.VITALS_URL + "/simulate")
@@ -151,31 +152,39 @@ fun VitalSignsScreen(
                             doOutput = true
                             setRequestProperty("Content-Type", "application/json; charset=utf-8")
                         }
+
                         conn.outputStream.use { os ->
                             val input = JSONObject().toString().toByteArray(Charsets.UTF_8)
                             os.write(input)
                         }
+
                         val responseCode = conn.responseCode
                         val responseText = if (responseCode in 200..299) {
                             conn.inputStream.bufferedReader().use { it.readText() }
                         } else {
-                            conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error HTTP $responseCode"
+                            conn.errorStream?.bufferedReader()?.use { it.readText() }
+                                ?: "Error HTTP $responseCode"
                         }
                         conn.disconnect()
 
                         val json = JSONObject(responseText)
+
                         val bpmValue = json.optInt("bpm", -1)
                         if (bpmValue != -1) bpm = bpmValue.toString()
+
                         val presionValue = json.optString("presion", "")
                         if (presionValue.isNotBlank()) pressure = presionValue
+
                         val tempValue = json.optDouble("temperatura", Double.NaN)
                         if (!tempValue.isNaN()) temperature = String.format("%.1f", tempValue)
                     }.onFailure { ex ->
                         Log.e("VitalSigns", "simulate failed", ex)
                     }
                 }
+                // IMPORTANTE: NO tocar hasPermissions aquí.
             }
 
+            // 2) Postear vitals al backend + cargar familiares
             withContext(Dispatchers.IO) {
                 runCatching {
                     val bodyJson = JSONObject().apply {
@@ -217,7 +226,8 @@ fun VitalSignsScreen(
                         val responseText2 = if (responseCode2 in 200..299) {
                             conn2.inputStream.bufferedReader().use { it.readText() }
                         } else {
-                            conn2.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error HTTP $responseCode2"
+                            conn2.errorStream?.bufferedReader()?.use { it.readText() }
+                                ?: "Error HTTP $responseCode2"
                         }
                         conn2.disconnect()
 
@@ -230,6 +240,7 @@ fun VitalSignsScreen(
                                 val id = adultoObj.optString("_id")
                                 val nombre = adultoObj.optString("nombre")
                                 val apellido = adultoObj.optString("apellido")
+
                                 if (id.isNotBlank() && users.none { it.first == id }) {
                                     users.add(id to "$nombre $apellido".trim())
                                 }
@@ -248,6 +259,7 @@ fun VitalSignsScreen(
             if (!hasPermissions) return@LaunchedEffect
 
             withContext(Dispatchers.IO) {
+
                 suspend fun simulateAndApply() {
                     val url = URL(BuildConfig.VITALS_URL + "/simulate")
                     val conn = (url.openConnection() as HttpURLConnection).apply {
@@ -257,29 +269,36 @@ fun VitalSignsScreen(
                         doOutput = true
                         setRequestProperty("Content-Type", "application/json; charset=utf-8")
                     }
+
                     conn.outputStream.use { os ->
                         val input = JSONObject().toString().toByteArray(Charsets.UTF_8)
                         os.write(input)
                     }
+
                     val responseCode = conn.responseCode
                     val responseText = if (responseCode in 200..299) {
                         conn.inputStream.bufferedReader().use { it.readText() }
                     } else {
-                        conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error HTTP $responseCode"
+                        conn.errorStream?.bufferedReader()?.use { it.readText() }
+                            ?: "Error HTTP $responseCode"
                     }
                     conn.disconnect()
 
                     val json = JSONObject(responseText)
+
                     val bpmValue = json.optInt("bpm", -1)
                     if (bpmValue != -1) bpm = bpmValue.toString()
+
                     val presionValue = json.optString("presion", "")
                     if (presionValue.isNotBlank()) pressure = presionValue
+
                     val tempValue = json.optDouble("temperatura", Double.NaN)
                     if (!tempValue.isNaN()) temperature = String.format("%.1f", tempValue)
                 }
 
                 val ok = runCatching {
                     val client = HealthConnectClient.getOrCreate(context)
+
                     val now = Instant.now()
                     val time = TimeRangeFilter.after(now.minus(24, ChronoUnit.HOURS))
 
@@ -302,8 +321,8 @@ fun VitalSignsScreen(
                         )
                     )
 
-                    val missingAny = hr.records.isEmpty() || bp.records.isEmpty() || temp.records.isEmpty()
-                    if (missingAny) {
+                    // Si cualquiera falta, usamos simulate
+                    if (hr.records.isEmpty() || bp.records.isEmpty() || temp.records.isEmpty()) {
                         false
                     } else {
                         val latestHR = hr.records.maxByOrNull { it.startTime }
@@ -330,6 +349,7 @@ fun VitalSignsScreen(
                         .onFailure { ex -> Log.e("VitalSigns", "simulate failed", ex) }
                 }
 
+                // Post al backend con lo que haya (HC o simulate)
                 runCatching {
                     val bodyJson = JSONObject().apply {
                         put("adultoMayorId", idUsuario)
@@ -360,6 +380,7 @@ fun VitalSignsScreen(
                 }
             }
         }
+
 
         LaunchedEffect(selectedUserId) {
             withContext(Dispatchers.IO) {
