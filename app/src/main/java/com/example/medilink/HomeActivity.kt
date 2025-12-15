@@ -43,10 +43,12 @@ data class AdultoVinculado(
 data class HomeReminder(
     val medId: String,
     val nombre: String,
-    val proximoRecordatorioTexto: String,
     val usuarioId: String,
     val forma: String,
     val cantidad: Int,
+    val fechaInicio: String,
+    val fechaFin: String,
+    val horas: List<String>,
     val horasDelDia: List<String>
 )
 
@@ -167,18 +169,22 @@ class HomeActivity : AppCompatActivity() {
                     val medicines = remindersFiltrados.map { reminder ->
 
                         val iconRes = when (reminder.forma.lowercase(Locale.ROOT)) {
-                            "Cápsula" -> R.drawable.ic_capsule
-                            "Tableta" -> R.drawable.ic_tablet
-                            "Solución" -> R.drawable.ic_solution
+                            "cápsula" -> R.drawable.ic_capsule
+                            "tableta" -> R.drawable.ic_tablet
+                            "solución" -> R.drawable.ic_solution
                             else -> R.drawable.ic_gutte
                         }
+
 
                         MedicineUi(
                             id = reminder.medId,
                             name = reminder.nombre,
-                            timeText = reminder.proximoRecordatorioTexto,
                             quantity = reminder.cantidad,
-                            iconRes = iconRes
+                            iconRes = iconRes,
+                            fechaInicio = reminder.fechaInicio,
+                            fechaFin = reminder.fechaFin,
+                            forma = reminder.forma,
+                            horas = reminder.horas
                         )
                     }
 
@@ -190,6 +196,7 @@ class HomeActivity : AppCompatActivity() {
                         tvEmptyMedicines.visibility = View.GONE
                         rvMedicines.adapter = MedicinesAdapter(
                             items = medicines,
+                            selectedDateIso = selectedDateIso,
                             onCheckedChange = { med, checked ->
                                 Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
                             },
@@ -254,7 +261,7 @@ class HomeActivity : AppCompatActivity() {
                     spinnerAdultos.adapter = adapterSpinner
                     spinnerAdultos.visibility = View.VISIBLE
 
-                    // seleccionar primero por defecto
+
                     selectedAdultId = adultos.first().id
 
                     spinnerAdultos.onItemSelectedListener =
@@ -266,7 +273,7 @@ class HomeActivity : AppCompatActivity() {
                                 id: Long
                             ) {
                                 selectedAdultId = adultos[position].id
-                                // recargar medicamentos para ese adulto y fecha actual
+
                                 loadMedicines()
                             }
 
@@ -325,9 +332,12 @@ class HomeActivity : AppCompatActivity() {
                     MedicineUi(
                         id = reminder.medId,
                         name = reminder.nombre,
-                        timeText = reminder.proximoRecordatorioTexto,
                         quantity = reminder.cantidad,
-                        iconRes = iconRes
+                        iconRes = iconRes,
+                        fechaInicio = reminder.fechaInicio,
+                        fechaFin = reminder.fechaFin,
+                        forma = reminder.forma,
+                        horas = reminder.horas
                     )
                 }
 
@@ -340,6 +350,7 @@ class HomeActivity : AppCompatActivity() {
 
                     val medicinesAdapter = MedicinesAdapter(
                         items = medicines,
+                        selectedDateIso = selectedDateIso,
                         onCheckedChange = { med, checked ->
                             Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
                         },
@@ -439,9 +450,12 @@ class HomeActivity : AppCompatActivity() {
                 MedicineUi(
                     id = reminder.medId,
                     name = reminder.nombre,
-                    timeText = reminder.proximoRecordatorioTexto,
                     quantity = reminder.cantidad,
-                    iconRes = iconRes
+                    iconRes = iconRes,
+                    fechaInicio = reminder.fechaInicio,
+                    fechaFin = reminder.fechaFin,
+                    forma = reminder.forma,
+                    horas = reminder.horas
                 )
             }
 
@@ -454,6 +468,7 @@ class HomeActivity : AppCompatActivity() {
 
                 val medicinesAdapter = MedicinesAdapter(
                     items = medicines,
+                    selectedDateIso = selectedDateIso,
                     onCheckedChange = { med, checked ->
                         Log.d("HomeActivity", "Medicamento ${med.name} tomado = $checked")
                     },
@@ -608,7 +623,8 @@ class HomeActivity : AppCompatActivity() {
 suspend fun obtenerRecordatoriosHome(
     endpointUrl: String,
     userId: String,
-    selectedDate: String
+    selectedDate: String,
+
 ): List<HomeReminder> = withContext(Dispatchers.IO) {
 
     val resultado = mutableListOf<HomeReminder>()
@@ -680,6 +696,14 @@ suspend fun obtenerRecordatoriosHome(
 
             val horaRaw = horasList.firstOrNull() ?: ""
 
+            if (horasArray != null) {
+                for (j in 0 until horasArray.length()) {
+                    val h = horasArray.optString(j, "").trim()
+                    if (h.isNotBlank()) horasList.add(h)
+                }
+            }
+
+
             val textoHora = if (horaRaw.isNotBlank()) {
                 try {
                     val parser = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -700,11 +724,14 @@ suspend fun obtenerRecordatoriosHome(
                 HomeReminder(
                     medId = medId,
                     nombre = nombre,
-                    proximoRecordatorioTexto = textoHora,
                     usuarioId = usuarioId,
                     forma = forma,
                     cantidad = cantidad,
-                    horasDelDia = horasList
+                    horasDelDia = horasList,
+
+                    fechaInicio = fechaInicioStr.take(10),
+                    fechaFin = fechaFinStr.take(10),
+                    horas = horasList
                 )
             )
         }
