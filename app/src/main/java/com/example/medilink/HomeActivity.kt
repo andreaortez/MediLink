@@ -693,32 +693,8 @@ suspend fun obtenerRecordatoriosHome(
                 }
             }
 
-            val horaRaw = horasList.firstOrNull() ?: ""
-
-            if (horasArray != null) {
-                for (j in 0 until horasArray.length()) {
-                    val h = horasArray.optString(j, "").trim()
-                    if (h.isNotBlank()) horasList.add(h)
-                }
-            }
 
 
-            val textoHora = if (horaRaw.isNotBlank()) {
-                try {
-                    val parser = SimpleDateFormat("HH:mm", Locale.getDefault())
-                    val date = parser.parse(horaRaw)
-                    val fmt = SimpleDateFormat("h:mm a", Locale("es", "ES"))
-                    val horaBonita = fmt.format(date!!).lowercase()
-
-
-                    "A las $horaBonita"
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    "Sin hora específica"
-                }
-            } else {
-                "Sin hora específica"
-            }
 
             resultado.add(
                 HomeReminder(
